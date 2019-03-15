@@ -1,0 +1,91 @@
+1)
+create or replace trigger tp
+before insert on Choosing
+for each row
+declare
+p number(7);
+
+begin
+
+if(:new.cdate>sysdate) then
+raise_application_error(-20001,'The date entry is invalid');
+else
+select pprice into p from Package1
+where pid1=:new.pid1;
+
+:new.cprice:=p*:new.people;
+end if;
+end tp;
+/
+
+2)
+create or replace trigger tp2
+before insert on Choosing2
+for each row
+declare
+d number(7);
+n number(7);
+
+begin
+if(:new.c2date>sysdate) then
+raise_application_error(-20001,'The date entry is invalid');
+else
+select hdayprice,hnightprice into d,n from Hotel
+where hid=:new.hid;
+
+:new.c2price:=((:new.totalrooms*:new.nodays*d)+(:new.totalrooms*:new.nonights*n)); 
+end if;
+end tp;
+/
+
+3)
+create or replace trigger tc3
+before insert or update on Choosing3
+for each row
+declare
+cursor c1(id1 Bus.trid%type) is select * from Bus where trid=id1;
+cursor c2(id2 Train1.trid%type) is select * from Train1 where trid=id2;
+cursor c3(id3 Flight.trid%type) is select * from Flight where trid=id3;
+r1 c1%rowtype;
+r2 c2%rowtype;
+r3 c3%rowtype;
+
+begin
+if(:new.c3date>sysdate) then
+raise_application_error(-20001,'The date entry is invalid');
+else
+open c1(:new.trid);
+loop
+fetch c1 into r1;
+exit when c1%notfound;
+--if (c1%found) then
+:new.c3price:=:new.peopleno*r1.bprice;
+:new.buid:=r1.buid;
+--end if;
+end loop;
+close c1;
+
+open c2(:new.trid);
+loop
+fetch c2 into r2;
+exit when c2%notfound;
+--if (c2%found) then
+:new.c3price:=:new.peopleno*r2.tprice1;
+:new.tid1:=r2.tid1;
+--end if;
+end loop;
+close c2;
+
+open c3(:new.trid);
+loop
+fetch c3 into r3;
+exit when c3%notfound;
+--if(c3%found) then
+:new.c3price:=:new.peopleno*r3.fprice;
+:new.fid:=r3.fid;
+--end if;
+end loop;
+close c3;
+end if;
+end tc3;
+/

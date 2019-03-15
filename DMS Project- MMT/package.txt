@@ -1,0 +1,250 @@
+--package declaration
+create or replace package pck1 is
+procedure p2(cno Customer.cid%type,mno Manager.mid%type,dd date);
+procedure p3(cno Bill_details.cid%type,dd date);
+
+end pck1;
+
+--package body
+
+create or replace package body pck1
+is
+
+procedure p2(cno Customer.cid%type,mno Manager.mid%type,dd date) is
+cursor c1(c Bill_details.cid%type) is select * from Bill_details where cid=c;
+cursor c2 is select * from Manager;
+cursor c3(c1 Choosing.cid%type,d1 date) is select * from Choosing where cid=c1 and cdate=d1;
+cursor c4(c2 Choosing1.cid%type,d2 date) is select * from Choosing1 where cid=c2 and c1date=d2;
+cursor c5(c3 Choosing2.cid%type,d3 date) is select * from Choosing2 where cid=c3 and c2date=d3;
+cursor c6(c4 Choosing3.cid%type,d4 date) is select * from Choosing3 where cid=c4 and c3date=d4;
+r1 c1%rowtype;
+r2 c2%rowtype;
+r3 c3%rowtype;
+r4 c4%rowtype;
+r5 c5%rowtype;
+r6 c6%rowtype;
+b Bill_details.biid%type;
+p Bill_details.pid1%type;
+d Bill_details.did%type;
+h Bill_details.hid%type;
+bu Bill_details.buid%type;
+t Bill_details.tid1%type;
+fi Bill_details.fid%type;
+f number(3);
+
+begin
+f:=0;
+open c2;
+loop
+fetch c2 into r2;
+exit when c2%notfound;
+
+if(mno=r2.mid) then
+
+open c1(cno);
+loop
+fetch c1 into r1;
+exit when c1%notfound;
+end loop;
+
+
+
+
+b:=cno+c1%rowcount*0.1;
+
+
+close c1;
+
+open c3(cno,dd);
+loop
+fetch c3 into r3;
+exit when c3%notfound;
+end loop;
+
+p:=r3.pid1;
+close c3;
+
+
+open c4(cno,dd);
+loop
+fetch c4 into r4;
+exit when c4%notfound;
+end loop;
+
+d:=r4.did;
+close c4;
+
+open c5(cno,dd);
+loop
+fetch c5 into r5;
+exit when c5%notfound;
+end loop;
+
+h:=r5.hid;
+close c5;
+
+open c6(cno,dd);
+loop
+fetch c6 into r6;
+exit when c6%notfound;
+end loop;
+
+bu:=r6.buid;
+t:=r6.tid1;
+fi:=r6.fid;
+close c6;
+
+
+f:=1;
+end if;
+end loop;
+close c2;
+
+if(f=0) then
+dbms_output.put_line('This Manager Id does not exist');
+end if;
+
+insert into Bill_details(biid,cid,pid1,did,hid,mid,bdate,buid,tid1,fid)
+values(b,cno,p,d,h,mno,dd,bu,t,fi);
+
+end p2;
+
+procedure p3(cno in Bill_details.cid%type,dd in date)
+is
+
+cna Customer.cname%type;
+mn Customer.mno%type;
+cursor c1(id Hotel.hid%type) is select * from Hotel where hid=id;
+cursor c2(c Choosing.cid%type,d Choosing.cdate%type) is select * from Choosing
+where cid=c and cdate=d;
+cp Choosing.cprice%type;
+cursor c3(c Choosing2.cid%type,d Choosing2.c2date%type) is select * from Choosing2
+where cid=c and c2date=d;
+cp2 Choosing2.c2price%type;
+cursor c4(c Choosing3.cid%type,d Choosing3.c3date%type) is select * from Choosing3
+where cid=c and c3date=d;
+cp3 Choosing3.c3price%type;
+hn Hotel.hname%type;
+ci Hotel.city%type;
+ty Hotel.htype%type;
+r1 c1%rowtype;
+r2 c2%rowtype;
+r3 c3%rowtype;
+r4 c4%rowtype;
+totalamt number(8);
+
+begin
+select cname,mno into cna,mn from Customer
+where cid=cno;
+
+/*for r1 in c1
+loop
+select * into r1 from Hotel
+where hid in(select hid from Choosing2 where cid=cno and c2date=dd);
+end loop;*/
+
+open c2(cno,dd);
+cp:=0;
+loop
+fetch c2 into r2;
+exit when c2%notfound;
+cp:=cp+r2.cprice;
+end loop;
+close c2;
+
+open c3(cno,dd);
+hn:='';
+ci:='';
+ty:='';
+cp2:=0;
+loop
+fetch c3 into r3;
+exit when c3%notfound;   
+open c1(r3.hid);
+   fetch c1 into r1;
+   hn:=hn || ' ' || r1.hname;
+   ci:=ci || ' ' || r1.city;
+   ty:=ty || ' ' || r1.htype;
+   close c1;
+
+cp2:=cp2+r3.c2price;
+end loop;
+close c3;
+
+open c4(cno,dd);
+cp3:=0;
+loop
+fetch c4 into r4;
+exit when c4%notfound;
+cp3:=cp3+r4.c3price;
+end loop;
+close c4;
+/*
+if cp is null
+then
+   if cp2 is null
+   then
+   totalamt:=cp3;
+   elsif cp3 is null
+   then
+   totalamt:=cp2;
+   else
+   totalamt:=cp2+cp3;
+   end if;
+else
+totalamt:=cp;
+end if;*/
+
+totalamt:=cp+cp2+cp3;
+
+if (hn is null and ci is null and ty is null) then
+dbms_output.put_line('name:' || ' ' || cna || ' ' || 'mobile no:' || ' ' || mn || ' ' || 'Total Amount:' || ' ' || totalamt );
+else
+
+dbms_output.put_line('name:' || ' ' || cna || ', ' || 'mobile no:' || ' ' || mn || ', ' || 'Hotel name:' || ' ' || hn || ', ' || 'Hotel type:' || ' ' || ty 
+|| ', ' || 'City:' || ' ' || ci || ', ' || 'Total Amount:' || ' ' || totalamt );
+end if;
+
+end p3;
+
+end pck1;
+
+--package calling
+
+declare
+
+cno Customer.cid%type;
+dd date;
+
+begin
+
+cno:=:cno;
+dd:=:dd;
+
+pck1.p3(cno,dd);
+
+Exception
+when no_data_found 
+then
+dbms_output.put_line('cid or date is invaid');
+
+end;
+/ 
+
+
+declare
+
+cno Customer.cid%type;
+mno Manager.mid%type;
+dd date;
+
+begin 
+
+cno:=:cno;
+mno:=:mno;
+dd:=:dd;
+
+pck1.p2(cno,mno,dd);
+
+end;
+/

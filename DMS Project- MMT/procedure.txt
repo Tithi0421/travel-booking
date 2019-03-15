@@ -1,0 +1,279 @@
+1)
+
+create or replace procedure p1(accname Customer.aname%type,pass Customer.password%type) is
+
+cursor c1 is select * from Customer;
+r1 c1%rowtype;
+f number(1);
+
+begin
+f:=0;
+open c1;
+loop
+fetch c1 into r1;
+exit when c1%notfound;
+
+if ((accname=r1.aname) and (pass=r1.password))
+then
+dbms_output.put_line('login successfull');
+f:=1;
+end if;
+end loop;
+close c1;
+
+if(f=0) then
+dbms_output.put_line('invalid username or password');
+end if;
+end p1;
+/
+
+
+**
+declare
+accname varchar2(20);
+pass varchar2(20);
+
+begin
+
+accname:=:accname;
+pass:=:pass;
+
+p1(accname,pass);
+
+end;
+/
+
+
+
+
+2)
+create or replace function f1(pno Package1.pid1%type) return varchar2 is
+cursor c1 is select * from Cruise;
+cursor c2 is select * from HotelFlight;
+r1 c1%rowtype;
+r2 c2%rowtype;
+f number(1);
+
+begin
+f:=0;
+open c1;
+loop
+fetch c1 into r1;
+exit when c1%notfound;
+if (pno=r1.pid1)
+then 
+return 'Cruise';
+f:=1;
+end if;
+end loop;
+close c1;
+
+open c2;
+loop
+fetch c2 into r2;
+exit when c2%notfound;
+if (pno=r2.pid1)
+then
+return 'Hotel+Flight';
+f:=1;
+end if;
+end loop;
+close c2;
+
+
+if(f=0) then
+return 'This Package Id does not exist';
+end if;
+
+end f1;
+
+
+**
+declare 
+
+pno Package1.pid1%type;
+name varchar2(50);
+
+begin 
+
+pno:=:pno;
+
+name:=f1(pno);
+
+dbms_output.put_line('This Package Id belongs to' || ' ' || name );
+
+end;
+
+
+
+3)
+create or replace function f2(dna Destination.dname%type) return boolean is
+cursor c1(ci Hotel.city%type) is select * from Hotel 
+where city=ci;
+r1 c1%rowtype;
+
+begin 
+
+open c1(dna);
+fetch c1 into r1;
+
+if c1%found then
+return true;
+ 
+else
+return false;
+end if;
+
+close c1;
+end f2;
+
+
+**
+declare
+cursor c1(ci Hotel.city%type) is select * from Hotel 
+where city=ci;
+dna Destination.dname%type;
+b boolean;
+r1 c1%rowtype;
+
+begin
+
+dna:=:dna;
+b:=f2(dna);
+ 
+if(b=true) then
+open c1(dna);
+loop
+fetch c1 into r1;
+exit when c1%notfound;
+
+dbms_output.put_line('Hotel is' || ' ' || r1.hname || ' ' || 'and Address is' || ' ' || r1.haddr);
+
+end loop;
+close c1;
+end if;
+
+end;
+/
+
+
+4)
+create or replace procedure p4(cno Customer.cid%type,dd date) is
+
+
+begin 
+
+delete from Choosing
+where cid=cno and cdate=dd;
+
+if(sql%found) then
+dbms_output.put_line('The data has been deleted from package');
+else
+dbms_output.put_line('No such entry exists');
+end if;
+
+Exception
+when no_data_found
+then
+dbms_output.put_line('No such entry exists');
+when too_many_rows
+then
+dbms_output.put_line('Multiple entries present');
+
+end p4;
+
+5)
+create or replace procedure p5(cno Customer.cid%type,dd date) is
+
+
+begin 
+
+delete from Choosing2
+where cid=cno and c2date=dd;
+
+if(sql%found) then
+dbms_output.put_line('The data has been deleted from Hotel');
+else
+dbms_output.put_line('No such entry exists');
+end if;
+
+Exception
+when no_data_found
+then
+dbms_output.put_line('No such entry exists');
+when too_many_rows
+then
+dbms_output.put_line('Multiple entries present');
+
+end p5;
+
+6)
+create or replace procedure p6(cno Customer.cid%type,dd date) is
+
+
+begin 
+
+delete from Choosing3
+where cid=cno and c3date=dd;
+
+if(sql%found) then
+dbms_output.put_line('The data has been deleted from Transportation');
+else
+dbms_output.put_line('No such entry exists');
+end if;
+
+Exception
+when no_data_found
+then
+dbms_output.put_line('No such entry exists');
+when too_many_rows
+then
+dbms_output.put_line('Multiple entries present');
+
+end p6;
+
+
+**
+declare
+cno Customer.cid%type;
+dd date;
+n number(1);
+
+begin 
+
+cno:=:cno;
+dd:=:dd;
+
+--dbms_output.put_line('1-Delete from Package  2-Delete from Hotel   3-Delete from Transportation');
+
+n:=:n;
+
+if(n=1) then
+p4(cno,dd);
+
+elsif(n=2) then
+p5(cno,dd);
+
+elsif(n=3) then
+p6(cno,dd);
+
+else
+dbms_output.put_line('Invalid number');
+
+end if;
+
+end;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
